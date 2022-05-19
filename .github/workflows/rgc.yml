@@ -1,0 +1,60 @@
+name: rgc
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch"
+        required: false
+        default: main
+      rgm_owner:
+        description: "RGM Owner"
+        required: true
+        default: "rgm_owner"
+      rgm_token:
+        description: "RGM Token"
+        required: true
+        default: "myToken"
+      user_login:
+        description: "Login"
+        required: true
+        default: "myuserEmail@mail.com"
+      user_password:
+        description: "Password"
+        required: false
+        default: "myPassword"
+      enable_log:
+        description: "Log"
+        required: false
+        default: "false"
+
+jobs:
+  commit:
+    runs-on: ubuntu-latest
+    name: rgc_job
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "14"
+      - name: Agent-IP
+        run: LATEST_IP=$(wget -qO- http://checkip.amazonaws.com) && IP="${IP-$LATEST_IP}" && echo $IP
+      - name: rgc tasks
+        id: rgc_tasks
+        run: |
+          INP_RGM_OWNER=$(jq -r '.inputs.rgm_owner' $GITHUB_EVENT_PATH)
+          INP_RGM_TOKEN=$(jq -r '.inputs.rgm_token' $GITHUB_EVENT_PATH)
+          INP_USER_LOGIN=$(jq -r '.inputs.user_login' $GITHUB_EVENT_PATH)
+          INP_USER_PASSWORD=$(jq -r '.inputs.user_password' $GITHUB_EVENT_PATH)
+          INP_ENABLE_LOG=$(jq -r '.inputs.enable_log' $GITHUB_EVENT_PATH)
+          echo ::add-mask::$INP_RGM_OWNER
+          echo ::add-mask::$INP_RGM_TOKEN
+          echo ::add-mask::$INP_USER_LOGIN
+          echo ::add-mask::$INP_USER_PASSWORD
+          echo ::add-mask::$INP_ENABLE_LOG
+          export RGM_OWNER="$INP_RGM_OWNER"
+          export RGM_TOKEN="$INP_RGM_TOKEN"
+          export USER_LOGIN="$INP_USER_LOGIN"
+          export USER_PASSWORD="$INP_USER_PASSWORD"
+          export ENABLE_LOG="$INP_ENABLE_LOG"
+          chmod +x ./rgc.sh && ./rgc.sh
